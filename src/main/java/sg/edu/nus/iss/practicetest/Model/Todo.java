@@ -43,7 +43,7 @@ public class Todo implements Serializable{
 
     
     // @DateTimeFormat (pattern = "EEE, MM/dd/yyyy")
-    // @JsonFormat (pattern = "EEE, MM/dd/yyyy HH:mm:sss", timezone = "Asia/Singapore")
+    // @JsonFormat (pattern = "EEE, MM/dd/yyyy", timezone = "Asia/Singapore")
     private Date updatedAt;
 
     public Todo() {

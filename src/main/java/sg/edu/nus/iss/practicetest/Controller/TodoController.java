@@ -1,5 +1,7 @@
 package sg.edu.nus.iss.practicetest.Controller;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +58,7 @@ public class TodoController {
 
 //Read
     @GetMapping(path = "/list")
-    public String getTodoList(Model model, HttpSession httpSession, HttpServletResponse response) {
+    public String getTodoList(Model model, HttpSession httpSession, HttpServletResponse response){
         if(null != httpSession.getAttribute("fullname") && null != httpSession.getAttribute("age")){
             List <Todo> todoList = todoService.getTodoList();
             model.addAttribute("todos", todoList);
@@ -88,8 +90,9 @@ public class TodoController {
         if(bindings.hasErrors()){            
             return "edit";
         }else{
-            todo.setCreateAt(todoService.getTodoById(todo.getId()).getCreateAt());
+            todo.setCreateAt(todoService.getTodoById(todo.getId()).getCreateAt()); //because the todo in html dont hv this data
             todoService.updateTodo(todo);
+ 
             model.addAttribute("todo",todo);
             response.setStatus(HttpServletResponse.SC_CREATED);
             return "success";

@@ -17,6 +17,7 @@ public class TodoService {
     
     @Autowired
     TodoRepo todoRepo;
+
 //Create
     public Todo createTodoWithInfo (Todo todo){        
         todoRepo.createTodo(todo);
@@ -38,6 +39,7 @@ public class TodoService {
         todo.setCreateAt(new Date());
         todo.setUpdatedAt(new Date());
         
+        todoRepo.createTodo(todo);
         todoRepo.createTodo(todo);
         return todo;
     }
@@ -67,6 +69,7 @@ public class TodoService {
     public void updateTodo(Todo todo){
         
         todo.setUpdatedAt(new Date());
+        todoRepo.updateTodo(todo);
         todoRepo.updateTodo(todo);
     }
 //Delete
