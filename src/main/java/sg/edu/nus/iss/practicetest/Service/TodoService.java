@@ -1,5 +1,6 @@
 package sg.edu.nus.iss.practicetest.Service;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -9,17 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sg.edu.nus.iss.practicetest.Model.Todo;
-import sg.edu.nus.iss.practicetest.Model.TodoRedis;
 import sg.edu.nus.iss.practicetest.Repo.TodoRepo;
 
 @Service
 public class TodoService {
     
     @Autowired
-    TodoRepo todoRedisRepo;
+    TodoRepo todoRepo;
 //Create
     public Todo createTodoWithInfo (Todo todo){        
-        todoRedisRepo.createTodo(convertToTodoRedisFull(todo));
+        todoRepo.createTodo(todo);
         return todo;
     }
 
@@ -27,7 +27,7 @@ public class TodoService {
         String id;
         do {
             id = UUID.randomUUID().toString();
-        } while (todoRedisRepo.getTodoById(id) != null);
+        } while (todoRepo.getTodoById(id) != null);
         return id;
     }
 
@@ -38,13 +38,17 @@ public class TodoService {
         todo.setCreateAt(new Date());
         todo.setUpdatedAt(new Date());
         
-        todoRedisRepo.createTodo(convertToTodoRedisFull(todo));
+        todoRepo.createTodo(todo);
         return todo;
     }
 //Read
+    public Boolean isTodoByIdExist (String id){
+        return todoRepo.isTodoByIdExist(id);
+    }
+
     public Todo getTodoById (String id){
-        TodoRedis todoRedis = todoRedisRepo.getTodoById(id);        
-        return convertToTodoFull(todoRedis);
+        Todo todo = todoRepo.getTodoById(id);        
+        return todo;
     }
 
     public List<Todo> getTodoList(){
@@ -56,34 +60,21 @@ public class TodoService {
         //     todoList.add(setTodo(todoRedis));
         // }
     
-        return todoRedisRepo.getTodoList().values().stream()
-                        .map(this::convertToTodoFull)
+        return todoRepo.getTodoList().values().stream()                        
                         .collect(Collectors.toList());
     }
 //Update
     public void updateTodo(Todo todo){
         
         todo.setUpdatedAt(new Date());
-        todoRedisRepo.updateTodo(convertToTodoRedisFull(todo));
+        todoRepo.updateTodo(todo);
     }
 //Delete
     public void deleteTodoById(String id){
-        todoRedisRepo.deleteTodo(id);
+        todoRepo.deleteTodo(id);
     }
 
-//Setter
-    private Todo convertToTodoFull (TodoRedis todoRedis){
-        return new Todo(todoRedis.getId(), todoRedis.getName(), todoRedis.getDescription(), 
-        todoRedis.convertToDueDate(), todoRedis.getPriority(), todoRedis.getStatus(), 
-        todoRedis.convertToCreateAt(), todoRedis.convertToUpdateAt());
-    }
-
-    private TodoRedis convertToTodoRedisFull (Todo todo){
-        return new TodoRedis(todo.getId(), todo.getName(), todo.getDescription(), 
-        todo.convertToDueDateEpoch(), todo.getPriority(), todo.getStatus(), 
-        todo.convertToCreatedAtEpoch(), todo.convertToUpdateAtEpoch());
-    }
-
+//Filter
     public List<Todo> getTodoListByStatus(String status) {
         List<Todo> filteredList = getTodoList();
         if (!"all".equalsIgnoreCase(status)) {
@@ -93,5 +84,40 @@ public class TodoService {
         }
         return filteredList;
     }
+
+    public List<Todo> getTodoListByPriority(String status) {
+        List<Todo> filteredList = getTodoList();
+        if (!"all".equalsIgnoreCase(status)) {
+            filteredList = filteredList.stream()
+                    .filter(todo -> status.equalsIgnoreCase(todo.getPriority()))
+                    .collect(Collectors.toList());
+        }
+        return filteredList;
+    }
+
+    public List<Todo> sortTodoListByPriority(String order) {
+        List<Todo> sortedList = getTodoList();
+        sortedList = sortedList.stream()                
+                .sorted(Comparator.comparingInt(this::getPriorityValue))
+                .collect(Collectors.toList());
+        if("asc".equals(order)){
+            return sortedList;
+        }else{
+            return sortedList.reversed();
+        }
+    }
+
+    private int getPriorityValue(Todo todo) {
+        switch (todo.getPriority()) {
+            case "low":
+                return 1;
+            case "medium":
+                return 2;
+            case "high":
+                return 3;
+            default:
+                return Integer.MAX_VALUE; // Handle unknown priorities
+        }
     
+    }
 }

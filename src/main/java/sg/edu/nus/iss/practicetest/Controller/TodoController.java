@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import sg.edu.nus.iss.practicetest.Model.Todo;
 import sg.edu.nus.iss.practicetest.Service.TodoService;
@@ -104,11 +105,25 @@ public class TodoController {
     }
 
 //Filter
-    @GetMapping("/filter/{status}")
+    @GetMapping("/filter/status/{status}")
     public String filterByStatus(@PathVariable("status") String status, Model model) {
         List<Todo> filteredTodos = todoService.getTodoListByStatus(status);
         model.addAttribute("todos", filteredTodos);
         return "listing";
     }
 
+    @GetMapping("/filter/priority/{priority}")
+    public String filterByPriority(@PathVariable("priority") String priority, Model model) {
+        List<Todo> filteredTodos = todoService.getTodoListByPriority(priority);
+        model.addAttribute("todos", filteredTodos);
+        return "listing";
+    }
+//sort
+    @GetMapping("/sort/priority")
+    public String sortByPriority (@RequestParam (name = "order", defaultValue = "asc") String order, Model model){
+        List<Todo> sortedTodos = todoService.sortTodoListByPriority(order);
+        model.addAttribute("todos", sortedTodos);
+        model.addAttribute("order", order.equals("asc") ? "desc" : "asc");
+        return "listing";
+    }
 }
