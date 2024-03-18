@@ -12,7 +12,6 @@ import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import sg.edu.nus.iss.practicetest.Model.Todo;
-import sg.edu.nus.iss.practicetest.Model.TodoRedis;
 import sg.edu.nus.iss.practicetest.Utils.Util;
 
 @Configuration
@@ -62,21 +61,4 @@ public class RedisConfig {
         
         return template;
     }
-
-    @Bean(Util.REDIS_TWO)
-    public RedisTemplate<String, TodoRedis> redisObjectTemplate(){
-
-        RedisTemplate <String, TodoRedis> template = new RedisTemplate<>();
-        template.setConnectionFactory(jedisConnectionFactory());
-        // //value and list operation
-        // template.setKeySerializer(new StringRedisSerializer());
-        // template.setValueSerializer(new StringRedisSerializer());
-        // //if using hash (Map operation)
-        // template.setHashKeySerializer(new StringRedisSerializer()); 
-        // template.setHashValueSerializer(new StringRedisSerializer());
-        
-        return template;
-    }
-    
-    
 }

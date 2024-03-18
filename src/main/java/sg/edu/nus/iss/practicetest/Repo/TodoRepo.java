@@ -1,51 +1,129 @@
 package sg.edu.nus.iss.practicetest.Repo;
 
-import java.util.Map;
+import java.io.IOException;
+import java.io.StringReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import sg.edu.nus.iss.practicetest.Model.TodoRedis;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import sg.edu.nus.iss.practicetest.Model.Todo;
 import sg.edu.nus.iss.practicetest.Utils.Util;
 
 @Repository
 public class TodoRepo {
     
     @Autowired
-    @Qualifier(Util.REDIS_TWO)
-    RedisTemplate <String, TodoRedis> template;
+    @Qualifier(Util.REDIS_ONE)
+    RedisTemplate <String, String> template;
+    
     
 //Create
-    public Boolean createTodo(TodoRedis todoRedis){
-        HashOperations <String, String, TodoRedis> hashOps = template.opsForHash();
-        //System.out.println(todoRedis.getDueDateEpoch());
-
-        return hashOps.putIfAbsent(Util.KEY_TODO, todoRedis.getId(), todoRedis);
+    public void createTodo(Todo todo) {
+        ListOperations<String, String> listOps = template.opsForList();
+        listOps.rightPush(Util.KEY_TODO, todo.toJSOString().toString());
+        listOps.rightPush(Util.KEY_TODO_ID, todo.getId());
     }
 //Read
-    public TodoRedis getTodoById (String id){
-        HashOperations <String, String, TodoRedis> hashOps = template.opsForHash();
-        return hashOps.get(Util.KEY_TODO, id);
+    public Todo getTodoById (String id){
+        ListOperations<String, String> listOps = template.opsForList();
+        Long index = listOps.indexOf(Util.KEY_TODO_ID, id);
+        String todoString = listOps.index(Util.KEY_TODO, index);
+        Todo todo = parseTodoFromHardcodedMethod(todoString);
+            
+        return todo; // Todo with given ID not found
     }
+//getTodoList by objectMapper
+    // public List<Todo> getTodoList() throws ParseException {
+    //     ListOperations<String, String> listOps = template.opsForList();
+    //     List<Todo> todos = new LinkedList<>();
+    //     List<String> todosInString = listOps.range(Util.KEY_TODO, 0, -1);        
 
-    public Map<String, TodoRedis> getTodoList(){
-        HashOperations <String, String, TodoRedis> hashOps = template.opsForHash();
         
-        return hashOps.entries(Util.KEY_TODO);
+    //     for (String todoInString : todosInString) {
+    //         try {
+    //             Todo todo = parseTodoFromJson(todoInString);
+    //             todos.add(todo);
+    //         } catch (IOException e) {
+    //             // Handle parsing error
+    //             e.printStackTrace();
+    //         }
+    //     }
+    
+    //     return todos;
+    // }
+
+    public List<Todo> getTodoList(){
+        ListOperations<String, String> listOps = template.opsForList();
+        List<Todo> todos = new LinkedList<>();
+        List<String> todosInString = listOps.range(Util.KEY_TODO, 0, -1);
+        
+        for (String todoInString : todosInString) {
+            Todo todo = parseTodoFromHardcodedMethod(todoInString);
+            todos.add(todo);
+        }
+    
+        return todos;
     }
-//Update
-    public void updateTodo(TodoRedis todoRedis){
-        HashOperations <String, String, TodoRedis> hashOps = template.opsForHash();
-        hashOps.put(Util.KEY_TODO, todoRedis.getId(), todoRedis);
+    
+    public List<String> getTodoIdList(){
+        ListOperations<String, String> listOps = template.opsForList();
+        return listOps.range(Util.KEY_TODO_ID, 0, -1);
+    }
+  
+// Update
+    public void updateTodo(Todo todo){
+        ListOperations <String, String> listOps = template.opsForList();
+        Long index = listOps.indexOf(Util.KEY_TODO_ID, todo.getId());
+        listOps.set(Util.KEY_TODO, index, todo.toJSOString().toString());
     }
 
 //Delete
-    public void deleteTodo(String id){
-        HashOperations <String, String, TodoRedis> hashOps = template.opsForHash();
-        hashOps.delete(Util.KEY_TODO, id);
-         
+    public void deleteTodo(String id, Todo todo){
+        ListOperations <String, String> listOps = template.opsForList();
+        if(listOps.indexOf(Util.KEY_TODO_ID, id) >= 0){
+            listOps.remove(Util.KEY_TODO_ID, 1, id);
+            listOps.remove(Util.KEY_TODO, 1, todo.toJSOString().toString());
+        }
     }
+
+    public Todo parseTodoFromJson(String todoInString) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(todoInString, Todo.class);
+    }
+
+    public Todo parseTodoFromHardcodedMethod(String todoInString) {
+        JsonObject jsonObject = Json.createReader(new StringReader(todoInString)).readObject();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.ENGLISH);
+
+        String id = jsonObject.getString("id");
+        String name = jsonObject.getString("name");
+        String description = jsonObject.getString("description");
+        Date dueDate = new Date(Long.parseLong(jsonObject.get("dueDate").toString())); //data save as long, so cannot use getString()
+        String priorityLevel = jsonObject.getString("priority");
+        String status = jsonObject.getString("status");
+        Date createdAt = new Date(jsonObject.getJsonNumber("createAt").longValue()); //another way to convert long to Date
+        // Date updatedAt = new Date(jsonObject.getJsonNumber("updatedAt").longValue());
+        Date updatedAt = null;
+        try {
+            updatedAt = formatter.parse(jsonObject.getString("updatedAt"));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    
+        return new Todo(id, name, description, dueDate, priorityLevel, status, createdAt, updatedAt);
+    }
+
 }

@@ -9,11 +9,11 @@
     <body>
         <h1> To Do List </h1>
         <span>
-            <a class="btn btn-primary" href="/todos/filter/all">List All</a>
-            <a class="btn btn-primary" href="/todos/filter/pending">Filter by Pending</a>
-            <a class="btn btn-primary" href="/todos/filter/started">Filter by Started</a>
-            <a class="btn btn-primary" href="/todos/filter/in_progress">Filter by In Progress</a>
-            <a class="btn btn-primary" href="/todos/filter/completed">Filter by Completed</a>
+            <a class="btn btn-primary" href="/todos/filter/status/all">List All</a>
+            <a class="btn btn-primary" href="/todos/filter/status/pending">Filter by Pending</a>
+            <a class="btn btn-primary" href="/todos/filter/status/started">Filter by Started</a>
+            <a class="btn btn-primary" href="/todos/filter/status/in_progress">Filter by In Progress</a>
+            <a class="btn btn-primary" href="/todos/filter/status/completed">Filter by Completed</a>
         </span>
         <table class="table table-striped">
             <thead>
@@ -30,10 +30,19 @@
                     Due Date
                 </th>
                 <th>
-                    Priority                    
+                    Priority
+                    <select class="form-select" id="priorityFilter" onchange="filterByPriority(this.value)">
+                        <option value="">-</option>
+                        <option value="all">All</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                    <a class="btn btn-primary" data-th-href="@{/todos/sort/priority(order=${order})}">Sort</a>
                 </th>
                 <th>
                     Status
+                    
                 </th>
                 <th>
                     Created At
@@ -61,4 +70,9 @@
         <br>
         <a class="btn btn-primary" href="/todos/add">Add New To Do</a>          
     </body>
+    <script>
+        function filterByPriority(priority) {
+            window.location.href = "/todos/filter/priority/" + priority;
+        }
+    </script>
 </html>
