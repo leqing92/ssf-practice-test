@@ -49,15 +49,21 @@ public class PracticeTestApplication implements CommandLineRunner{
 		try (InputStream is = new ByteArrayInputStream(payload.getBytes())) {
 			JsonReader reader = Json.createReader(is);
 			JsonArray jArray = reader.readArray();
-			
-			for(JsonValue jValue: jArray){
-				JsonObject jsonObject = (JsonObject) jValue;
-				
+
+			for (int i = 0; i < jArray.size(); i ++){
+				JsonObject jsonObject = jArray.get(i).asJsonObject();
 				Todo todo = parseTodoFromHardcodedMethod(jsonObject);
-				// System.out.println(todo.toJSOString());
-				
 				todoService.createTodoWithInfo(todo);
 			}
+			
+			// for(JsonValue jValue: jArray){
+			// 	JsonObject jsonObject = (JsonObject) jValue;
+				
+			// 	Todo todo = parseTodoFromHardcodedMethod(jsonObject);
+			// 	// System.out.println(todo.toJSOString());
+				
+			// 	todoService.createTodoWithInfo(todo);
+			// }
 		} 
 		
 		System.out.println("Data saved to Redis successfully.");
