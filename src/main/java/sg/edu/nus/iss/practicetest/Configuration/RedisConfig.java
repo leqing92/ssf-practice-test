@@ -8,10 +8,8 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import sg.edu.nus.iss.practicetest.Model.Todo;
 import sg.edu.nus.iss.practicetest.Utils.Util;
 
 @Configuration

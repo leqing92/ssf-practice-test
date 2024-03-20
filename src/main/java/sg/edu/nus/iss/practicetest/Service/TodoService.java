@@ -1,7 +1,5 @@
 package sg.edu.nus.iss.practicetest.Service;
 
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -21,12 +19,7 @@ public class TodoService {
     TodoRepo todoRepo;
 //Create
     public Todo createTodoWithInfo (Todo todo){
-        if(!todoRepo.getTodoIdList().contains(todo.getId())){
-            todoRepo.createTodo(todo);
-        }
-        else{
-            System.out.println("ID: " + todo.getId() + " exist!");
-        }
+        todoRepo.createTodo(todo);
         return todo;
     }
 
@@ -34,7 +27,7 @@ public class TodoService {
         String id;
         do {
             id = UUID.randomUUID().toString();
-        } while (todoRepo.getTodoIdList().contains(id));
+        } while (todoRepo.isTodoByIdExist(id));
         return id;
     }
 
@@ -48,9 +41,10 @@ public class TodoService {
         todoRepo.createTodo(todo);
         return todo;
     }
+
 //Read
     public Boolean isTodoByIdExist (String id){
-        return todoRepo.getTodoIdList().contains(id);
+        return todoRepo.isTodoByIdExist(id);
     }
     
     public Todo getTodoById (String id){        
@@ -71,7 +65,7 @@ public class TodoService {
 //Delete
     public void deleteTodoById(String id){
         
-        todoRepo.deleteTodo(id, getTodoById(id));
+        todoRepo.deleteTodo(id);
     }
 
 

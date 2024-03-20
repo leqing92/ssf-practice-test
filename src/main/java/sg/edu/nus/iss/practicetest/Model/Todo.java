@@ -8,15 +8,12 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import jakarta.annotation.Nullable;
+
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
-import jakarta.json.JsonValue;
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 
 public class Todo implements Serializable{   

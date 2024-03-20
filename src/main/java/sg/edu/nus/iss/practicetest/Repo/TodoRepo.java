@@ -8,9 +8,11 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -32,20 +34,23 @@ public class TodoRepo {
     
 //Create
     public void createTodo(Todo todo) {
-        ListOperations<String, String> listOps = template.opsForList();
-        listOps.rightPush(Util.KEY_TODO, todo.toJSOString().toString());
-        listOps.rightPush(Util.KEY_TODO_ID, todo.getId());
+        HashOperations<String, String, String> hashOps = template.opsForHash();
+        hashOps.put(Util.KEY_TODO, todo.getId(),todo.toJSOString().toString());        
     }
 //Read
+    public Boolean isTodoByIdExist (String id){
+        HashOperations <String, String, Todo> hashOps = template.opsForHash();
+        return hashOps.hasKey(Util.KEY_TODO, id);
+    }
+
     public Todo getTodoById (String id){
-        ListOperations<String, String> listOps = template.opsForList();
-        Long index = listOps.indexOf(Util.KEY_TODO_ID, id);
-        String todoString = listOps.index(Util.KEY_TODO, index);
+        HashOperations<String, String, String> hashOps = template.opsForHash();
+        String todoString = hashOps.get(Util.KEY_TODO, id);        
         Todo todo = parseTodoFromHardcodedMethod(todoString);
             
-        return todo; // Todo with given ID not found
+        return todo; 
     }
-//getTodoList by objectMapper
+//getTodoList by objectMapper (to be modified)
     // public List<Todo> getTodoList() throws ParseException {
     //     ListOperations<String, String> listOps = template.opsForList();
     //     List<Todo> todos = new LinkedList<>();
@@ -66,37 +71,28 @@ public class TodoRepo {
     // }
 
     public List<Todo> getTodoList(){
-        ListOperations<String, String> listOps = template.opsForList();
+        HashOperations<String, String, String> hashOps = template.opsForHash();
         List<Todo> todos = new LinkedList<>();
-        List<String> todosInString = listOps.range(Util.KEY_TODO, 0, -1);
+        Map <String, String> todosInMap= hashOps.entries(Util.KEY_TODO);        
         
-        for (String todoInString : todosInString) {
+        for (String todoInString : todosInMap.values()) {
             Todo todo = parseTodoFromHardcodedMethod(todoInString);
             todos.add(todo);
         }
     
         return todos;
-    }
-    
-    public List<String> getTodoIdList(){
-        ListOperations<String, String> listOps = template.opsForList();
-        return listOps.range(Util.KEY_TODO_ID, 0, -1);
-    }
+    }      
   
 // Update
     public void updateTodo(Todo todo){
-        ListOperations <String, String> listOps = template.opsForList();
-        Long index = listOps.indexOf(Util.KEY_TODO_ID, todo.getId());
-        listOps.set(Util.KEY_TODO, index, todo.toJSOString().toString());
+        HashOperations<String, String, String> hashOps = template.opsForHash();        
+        hashOps.put(Util.KEY_TODO, todo.getId(), todo.toJSOString().toString());
     }
 
 //Delete
-    public void deleteTodo(String id, Todo todo){
-        ListOperations <String, String> listOps = template.opsForList();
-        if(listOps.indexOf(Util.KEY_TODO_ID, id) >= 0){
-            listOps.remove(Util.KEY_TODO_ID, 1, id);
-            listOps.remove(Util.KEY_TODO, 1, todo.toJSOString().toString());
-        }
+    public void deleteTodo(String id){
+        HashOperations<String, String, String> hashOps = template.opsForHash(); 
+        hashOps.delete(Util.KEY_TODO, id);
     }
 
     public Todo parseTodoFromJson(String todoInString) throws IOException {
